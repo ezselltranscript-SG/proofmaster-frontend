@@ -1,9 +1,11 @@
 import axios from 'axios';
 
+// Obtenemos la URL base del backend desde las variables de entorno
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
 // Creamos una instancia de axios con la URL base
-// Usamos el proxy configurado en setupProxy.js para evitar problemas de CORS
 const api = axios.create({
-  baseURL: '/api',  // Esto usará el proxy configurado en setupProxy.js
+  baseURL: API_URL,  // Usamos la URL del backend desde las variables de entorno
   headers: {
     'Content-Type': 'application/json',
   },
