@@ -50,7 +50,8 @@ const HighlightedText = styled.div`
 `;
 
 const HighlightedWord = styled.span`
-  background-color: #ffeb3b;
+  background-color: ${props => props.correctionType === 'town' ? '#e3f2fd' : '#ffeb3b'};
+  border-left: 2px solid ${props => props.correctionType === 'town' ? '#2196f3' : '#fbc02d'};
   padding: 2px 0;
   border-radius: 2px;
   font-weight: 500;
@@ -71,7 +72,7 @@ const ToolIcon = styled.span`
   }
 `;
 
-const TextEditor = ({ text, setText, highlightWords = [] }) => {
+const TextEditor = ({ text, setText, highlightWords = [], suggestions = [] }) => {
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
   const [paragraphCount, setParagraphCount] = useState(0);
@@ -111,6 +112,12 @@ const TextEditor = ({ text, setText, highlightWords = [] }) => {
     // Crear un mapa de posiciones para todas las palabras a resaltar
     let allMatches = [];
     
+    // Crear un mapa para buscar rápidamente el tipo de corrección por palabra
+    const correctionTypeMap = {};
+    suggestions.forEach(suggestion => {
+      correctionTypeMap[suggestion.original] = suggestion.correction_type || 'normal';
+    });
+    
     // Procesar cada palabra a resaltar
     highlightWords.forEach(word => {
       // Escapar caracteres especiales en la palabra para la expresión regular
@@ -120,7 +127,7 @@ const TextEditor = ({ text, setText, highlightWords = [] }) => {
       let wordRegex;
       
       // Para caracteres especiales como &, + o símbolos, no usamos límites de palabra
-      if (/^[^\w\s]$/.test(word) || word === '&' || word === '+' || word.includes('°') || word.includes('.')) {
+      if (/^[^\\w\\s]$/.test(word) || word === '&' || word === '+' || word.includes('°') || word.includes('.')) {
         wordRegex = new RegExp(escapedWord, 'gi');
       } else {
         // Para palabras normales, usamos límites de palabra
@@ -136,7 +143,8 @@ const TextEditor = ({ text, setText, highlightWords = [] }) => {
         allMatches.push({
           start: match.index,
           end: match.index + match[0].length,
-          word: match[0]
+          word: match[0],
+          correctionType: correctionTypeMap[word] || 'normal' // Usar el tipo de corrección del mapa
         });
       }
     });
@@ -175,9 +183,12 @@ const TextEditor = ({ text, setText, highlightWords = [] }) => {
         resultElements.push(text.substring(lastPos, match.start));
       }
       
-      // Añadir la palabra resaltada
+      // Añadir la palabra resaltada con el tipo de corrección adecuado
       resultElements.push(
-        <HighlightedWord key={index}>
+        <HighlightedWord 
+          key={index} 
+          correctionType={match.correctionType}
+        >
           {match.word}
         </HighlightedWord>
       );

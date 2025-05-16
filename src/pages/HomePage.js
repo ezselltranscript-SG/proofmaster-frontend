@@ -263,6 +263,7 @@ const HomePage = () => {
             text={text} 
             setText={handleTextChange}
             highlightWords={highlightWords}
+            suggestions={suggestions}
           />
           <Analysis 
             wordCount={wordCount}
