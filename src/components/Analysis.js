@@ -115,9 +115,6 @@ const Analysis = ({
               >
                 <p><strong>Original:</strong> <code>{suggestion.original}</code></p>
                 <p><strong>Suggestion:</strong> <code>{suggestion.suggestion}</code></p>
-                {suggestion.correction_type === 'town' && (
-                  <p><small style={{ color: '#0d47a1' }}>Corrección de nombre de lugar</small></p>
-                )}
                 <ActionButtons>
                   <CheckMark 
                     title="Apply suggestion" 
