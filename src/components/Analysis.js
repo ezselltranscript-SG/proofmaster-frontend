@@ -29,13 +29,16 @@ const SuggestionsSection = styled.div`
   margin-bottom: 1.5rem;
 `;
 
+// Estilo base para todas las sugerencias
 const SuggestionBox = styled.div`
-  background: #fff9c4;
-  border-left: 5px solid #fbc02d;
   padding: 0.8rem;
   border-radius: 5px;
   position: relative;
   margin-bottom: 1rem;
+  
+  // Color por defecto (amarillo para correcciones normales)
+  background: ${props => props.correctionType === 'town' ? '#e3f2fd' : '#fff9c4'};
+  border-left: 5px solid ${props => props.correctionType === 'town' ? '#2196f3' : '#fbc02d'};
 `;
 
 const ActionButtons = styled.div`
@@ -106,9 +109,15 @@ const Analysis = ({
         {suggestions.length > 0 ? (
           <>
             {suggestions.map((suggestion, index) => (
-              <SuggestionBox key={index}>
+              <SuggestionBox 
+                key={index} 
+                correctionType={suggestion.correction_type || 'normal'}
+              >
                 <p><strong>Original:</strong> <code>{suggestion.original}</code></p>
                 <p><strong>Suggestion:</strong> <code>{suggestion.suggestion}</code></p>
+                {suggestion.correction_type === 'town' && (
+                  <p><small style={{ color: '#0d47a1' }}>Corrección de nombre de lugar</small></p>
+                )}
                 <ActionButtons>
                   <CheckMark 
                     title="Apply suggestion" 
