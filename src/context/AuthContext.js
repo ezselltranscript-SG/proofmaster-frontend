@@ -10,6 +10,15 @@ const api = axios.create({
   }
 });
 
+// Configurar interceptor para agregar el token a todas las peticiones
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Interceptor para manejar errores
 api.interceptors.response.use(
   response => response,
@@ -26,14 +35,21 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar si hay un token guardado
-    const token = localStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      checkAuth();
-    } else {
+    const initializeAuth = async () => {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          await checkAuth();
+        } catch (error) {
+          console.error('Error initializing auth:', error);
+          await logout();
+        }
+      }
       setLoading(false);
-    }
+    };
+
+    initializeAuth();
   }, []);
 
   const checkAuth = async () => {
@@ -57,7 +73,6 @@ export const AuthProvider = ({ children }) => {
       
       const { access_token } = response.data;
       localStorage.setItem('token', access_token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       await checkAuth();
       return true;
     } catch (error) {
@@ -74,7 +89,6 @@ export const AuthProvider = ({ children }) => {
       });
       const { access_token } = response.data;
       localStorage.setItem('token', access_token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       await checkAuth();
       return true;
     } catch (error) {
@@ -85,12 +99,14 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
+      const token = localStorage.getItem('token');
+      if (token) {
+        await api.post('/auth/logout');
+      }
     } catch (error) {
       console.error('Logout error:', error.response?.data || error.message);
     } finally {
       localStorage.removeItem('token');
-      delete api.defaults.headers.common['Authorization'];
       setUser(null);
     }
   };
