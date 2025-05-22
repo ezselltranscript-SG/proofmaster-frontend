@@ -1,13 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import styled from 'styled-components';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
 import GlobalStyles from './styles/GlobalStyles';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import Notification from './components/Notification';
 
 // Componente para proteger rutas
 const ProtectedRoute = ({ children }) => {
