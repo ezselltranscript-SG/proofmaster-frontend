@@ -13,6 +13,7 @@ const SignupPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(''); // Limpiar error previo
     
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -21,9 +22,11 @@ const SignupPage = () => {
 
     try {
       await signup(email, password);
-      navigate('/login');
+      // Usar replace para evitar que el usuario pueda volver atrás a la página de signup
+      navigate('/login', { replace: true });
     } catch (err) {
-      setError('Error creating account. Please try with a different email.');
+      console.error('Signup error:', err);
+      setError(err.response?.data?.detail || 'Error creating account. Please try with a different email.');
     }
   };
 
@@ -64,7 +67,7 @@ const SignupPage = () => {
         </Form>
         <LinkText>
           Already have an account?{' '}
-          <Link onClick={() => navigate('/login')}>Login here</Link>
+          <Link onClick={() => navigate('/login', { replace: true })}>Login here</Link>
         </LinkText>
       </FormCard>
     </Container>
