@@ -60,13 +60,13 @@ const Container = styled.div`
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router basename="/">
         <GlobalStyles />
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="login" element={<LoginPage />} />
+          <Route path="signup" element={<SignupPage />} />
+          <Route path="forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="reset-password" element={<ResetPasswordPage />} />
           <Route
             path="/"
             element={
@@ -75,8 +75,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* Ruta para manejar 404 */}
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthProvider>
