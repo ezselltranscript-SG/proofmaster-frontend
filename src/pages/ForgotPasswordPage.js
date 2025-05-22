@@ -1,30 +1,39 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 import styled from 'styled-components';
 
-const LoginPage = () => {
+const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+    setMessage('');
+
     try {
-      await login(email, password);
-      navigate('/');
+      await axios.post(`${process.env.REACT_APP_API_URL}/auth/forgot-password`, {
+        email
+      });
+      setMessage('If the email exists, you will receive reset instructions shortly.');
     } catch (err) {
-      setError('Login failed. Please verify your credentials.');
+      setError('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <Container>
       <FormCard>
-        <Title>Login</Title>
+        <Title>Reset Password</Title>
         {error && <ErrorMessage>{error}</ErrorMessage>}
+        {message && <SuccessMessage>{message}</SuccessMessage>}
         <Form onSubmit={handleSubmit}>
           <FormGroup>
             <Label>Email:</Label>
@@ -35,24 +44,13 @@ const LoginPage = () => {
               required
             />
           </FormGroup>
-          <FormGroup>
-            <Label>Password:</Label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </FormGroup>
-          <Button type="submit">Login</Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Sending...' : 'Send Reset Link'}
+          </Button>
         </Form>
         <LinkText>
-          Don't have an account?{' '}
-          <Link onClick={() => navigate('/signup')}>Sign up here</Link>
-        </LinkText>
-        <LinkText>
-          Forgot your password?{' '}
-          <Link onClick={() => navigate('/forgot-password')}>Reset it here</Link>
+          Remember your password?{' '}
+          <Link onClick={() => navigate('/login')}>Login here</Link>
         </LinkText>
       </FormCard>
     </Container>
@@ -124,11 +122,25 @@ const Button = styled.button`
   &:hover {
     background-color: #0056b3;
   }
+  
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
 `;
 
 const ErrorMessage = styled.div`
   color: #dc3545;
   background-color: #f8d7da;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  text-align: center;
+`;
+
+const SuccessMessage = styled.div`
+  color: #28a745;
+  background-color: #d4edda;
   padding: 0.75rem;
   border-radius: 4px;
   margin-bottom: 1rem;
@@ -150,4 +162,4 @@ const Link = styled.span`
   }
 `;
 
-export default LoginPage;
+export default ForgotPasswordPage;

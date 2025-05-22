@@ -1,54 +1,78 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import styled from 'styled-components';
 
-const SignupPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const ResetPasswordPage = () => {
+  const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const { signup } = useAuth();
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Obtener el token del query parameter
+  const token = new URLSearchParams(location.search).get('token');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (password !== confirmPassword) {
+    if (newPassword !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
+    setLoading(true);
+    setError('');
+
     try {
-      await signup(email, password);
-      navigate('/');
+      await axios.post(`${process.env.REACT_APP_API_URL}/auth/reset-password`, {
+        token,
+        new_password: newPassword
+      });
+      setSuccess(true);
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
     } catch (err) {
-      setError('Error creating account. Please try with a different email.');
+      setError(err.response?.data?.detail || 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (!token) {
+    return (
+      <Container>
+        <FormCard>
+          <ErrorMessage>Invalid reset link. Please request a new password reset.</ErrorMessage>
+          <LinkText>
+            <Link onClick={() => navigate('/forgot-password')}>Go back to reset password</Link>
+          </LinkText>
+        </FormCard>
+      </Container>
+    );
+  }
 
   return (
     <Container>
       <FormCard>
-        <Title>Create Account</Title>
+        <Title>Reset Your Password</Title>
         {error && <ErrorMessage>{error}</ErrorMessage>}
+        {success && (
+          <SuccessMessage>
+            Password reset successful! Redirecting to login...
+          </SuccessMessage>
+        )}
         <Form onSubmit={handleSubmit}>
           <FormGroup>
-            <Label>Email:</Label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label>Password:</Label>
+            <Label>New Password:</Label>
             <Input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
               required
+              minLength={8}
             />
           </FormGroup>
           <FormGroup>
@@ -58,14 +82,13 @@ const SignupPage = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              minLength={8}
             />
           </FormGroup>
-          <Button type="submit">Create Account</Button>
+          <Button type="submit" disabled={loading || success}>
+            {loading ? 'Resetting...' : 'Reset Password'}
+          </Button>
         </Form>
-        <LinkText>
-          Already have an account?{' '}
-          <Link onClick={() => navigate('/login')}>Login here</Link>
-        </LinkText>
       </FormCard>
     </Container>
   );
@@ -136,11 +159,25 @@ const Button = styled.button`
   &:hover {
     background-color: #0056b3;
   }
+  
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
 `;
 
 const ErrorMessage = styled.div`
   color: #dc3545;
   background-color: #f8d7da;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  text-align: center;
+`;
+
+const SuccessMessage = styled.div`
+  color: #28a745;
+  background-color: #d4edda;
   padding: 0.75rem;
   border-radius: 4px;
   margin-bottom: 1rem;
@@ -162,4 +199,4 @@ const Link = styled.span`
   }
 `;
 
-export default SignupPage;
+export default ResetPasswordPage;

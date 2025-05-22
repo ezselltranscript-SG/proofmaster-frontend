@@ -1,5 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -46,12 +48,26 @@ const Button = styled.button`
 `;
 
 const Header = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
   return (
     <HeaderContainer>
       <Logo>🔤 <span>ProofMaster</span></Logo>
       <Nav>
-        <a href="#signin">Sign In</a>
-        <Button>Try Pro</Button>
+        {user ? (
+          <>
+            <span>{user.email}</span>
+            <Button onClick={handleLogout}>Logout</Button>
+          </>
+        ) : (
+          <Button onClick={() => navigate('/login')}>Login</Button>
+        )}
       </Nav>
     </HeaderContainer>
   );
