@@ -1,6 +1,9 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
+// Configurar axios
+axios.defaults.withCredentials = true;
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -35,6 +38,11 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/auth/login`, {
         email: email,
         password: password
+      }, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
       const { access_token } = response.data;
       localStorage.setItem('token', access_token);
