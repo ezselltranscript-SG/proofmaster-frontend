@@ -2,7 +2,22 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
 // Configurar axios
-axios.defaults.withCredentials = true;
+const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
+// Interceptor para manejar errores
+api.interceptors.response.use(
+  response => response,
+  error => {
+    console.error('API Error:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
 
 const AuthContext = createContext(null);
 
@@ -23,10 +38,10 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/auth/me`);
+      const response = await api.get('/auth/me');
       setUser(response.data);
     } catch (error) {
-      console.error('Error checking auth:', error);
+      console.error('Error checking auth:', error.response?.data || error.message);
       logout();
     } finally {
       setLoading(false);
@@ -35,51 +50,47 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/auth/login`, {
+      const response = await api.post('/auth/login', {
         email: email,
         password: password
-      }, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json',
-        }
       });
+      
       const { access_token } = response.data;
       localStorage.setItem('token', access_token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       await checkAuth();
       return true;
     } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+      console.error('Login error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.detail || 'Login failed. Please verify your credentials.');
     }
   };
 
   const signup = async (email, password) => {
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/auth/signup`, {
+      const response = await api.post('/auth/signup', {
         email,
         password
       });
       const { access_token } = response.data;
       localStorage.setItem('token', access_token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       await checkAuth();
       return true;
     } catch (error) {
-      console.error('Signup error:', error);
-      throw error;
+      console.error('Signup error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.detail || 'Error creating account. Please try with a different email.');
     }
   };
 
   const logout = async () => {
     try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/auth/logout`);
+      await api.post('/auth/logout');
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Logout error:', error.response?.data || error.message);
     } finally {
       localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
+      delete api.defaults.headers.common['Authorization'];
       setUser(null);
     }
   };
