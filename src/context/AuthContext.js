@@ -43,7 +43,9 @@ export const AuthProvider = ({ children }) => {
           await checkAuth();
         } catch (error) {
           console.error('Error initializing auth:', error);
-          await logout();
+          // Silently clear token without calling the logout endpoint
+          localStorage.removeItem('token');
+          setUser(null);
         }
       }
       setLoading(false);
@@ -56,9 +58,13 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.get('/auth/me');
       setUser(response.data);
+      return response.data;
     } catch (error) {
-      console.error('Error checking auth:', error.response?.data || error.message);
-      logout();
+      // Solo loguear el error si no es 401 (no autorizado)
+      if (error.response?.status !== 401) {
+        console.error('Error checking auth:', error.response?.data || error.message);
+      }
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -101,10 +107,16 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem('token');
       if (token) {
-        await api.post('/auth/logout');
+        // Solo intentar logout en el servidor si hay un usuario autenticado
+        if (user) {
+          await api.post('/auth/logout');
+        }
       }
     } catch (error) {
-      console.error('Logout error:', error.response?.data || error.message);
+      // Solo loguear el error si no es 401 (no autorizado)
+      if (error.response?.status !== 401) {
+        console.error('Logout error:', error.response?.data || error.message);
+      }
     } finally {
       localStorage.removeItem('token');
       setUser(null);
